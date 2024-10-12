@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 설정</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Twitter API 설정</h1>
+        <form method="POST" action="/api-settings">
+            <label for="api_key">API Key:</label>
+            <input type="password" id="api_key" name="api_key" value="{{ api_key }}">
+            <br>
+            <label for="api_secret">API Secret:</label>
+            <input type="password" id="api_secret" name="api_secret" value="{{ api_secret }}">
+            <br>
+            <label for="access_token">Access Token:</label>
+            <input type="password" id="access_token" name="access_token" value="{{ access_token }}">
+            <br>
+            <label for="access_token_secret">Access Token Secret:</label>
+            <input type="password" id="access_token_secret" name="access_token_secret" value="{{ access_token_secret }}">
+            <br>
+            <button type="submit">저장</button>
+        </form>
+
+        <h2>현재 API 정보</h2>
+        <ul>
+            <li>API Key: {{ api_key[:5] }}{{ '*' * (api_key|length - 5) if api_key else '없음' }}</li>
+            <li>API Secret: {{ api_secret[:5] }}{{ '*' * (api_secret|length - 5) if api_secret else '없음' }}</li>
+            <li>Access Token: {{ access_token[:5] }}{{ '*' * (access_token|length - 5) if access_token else '없음' }}</li>
+            <li>Access Token Secret: {{ access_token_secret[:5] }}{{ '*' * (access_token_secret|length - 5) if access_token_secret else '없음' }}</li>
+        </ul>
+    </div>
+</body>
+</html>

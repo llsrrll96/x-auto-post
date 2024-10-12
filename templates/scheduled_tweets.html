@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>예약된 트윗 확인</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 90%;
+            max-width: 1000px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            flex-wrap: wrap;
+        }
+        .column {
+            width: 48%;
+            padding: 10px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #4A90E2;
+            width: 100%;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background-color: #f9f9f9;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .timestamp {
+            font-size: 0.9em;
+            color: #888;
+        }
+        .link-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 0 10px; /* 버튼 간격 */
+            text-decoration: none;
+            color: white;
+            background-color: #4A90E2; /* 버튼 배경색 */
+            border-radius: 5px; /* 둥근 모서리 */
+            transition: background-color 0.3s; /* 배경색 변화 애니메이션 */
+        }
+        .button:hover {
+            background-color: #357ABD; /* 호버 시 색상 변화 */
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .column {
+                width: 100%; /* 작은 화면에서 전체 너비 사용 */
+                margin-bottom: 20px; /* 아래쪽 여백 추가 */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="column">
+            <h1>예약된 트윗 목록</h1>
+            <ul>
+                {% for tweet in scheduled_tweets %}
+                    <li>
+                        <div class="timestamp">{{ tweet.timestamp }} - {{ tweet.time }}</div>
+                        <div>{{ tweet.content }}</div>
+                    </li>
+                {% else %}
+                    <li>예약된 트윗이 없습니다.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="column">
+            <h1>전송 성공한 트윗 목록</h1>
+            <ul>
+                {% for tweet in sent_tweets %}
+                    <li>
+                        <div class="timestamp">{{ tweet.timestamp }}</div>
+                        <div>{{ tweet.content }}</div>
+                    </li>
+                {% else %}
+                    <li>전송 성공한 트윗이 없습니다.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="link-container">
+        <a class="button" href="/">메인으로 돌아가기</a>
+        <a class="button" href="/api-settings">API 설정하기</a>
+    </div>
+</body>
+</html>

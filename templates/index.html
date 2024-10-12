@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>트위터 글 등록</title>
+</head>
+<body>
+    <div class="container">
+        <h1>트위터 글 등록하기</h1>
+        <form id="tweet-form" method="POST" action="/schedule-tweet">
+            <label for="tweet">트윗 내용:</label>
+            <textarea id="tweet" name="tweet" required></textarea>
+            <label for="scheduleTime">스케줄 시간 (HH:MM 형식):</label>
+            <input type="time" id="scheduleTime" name="scheduleTime" required>
+            <button type="submit">트윗 예약하기</button>
+        </form>
+        <div id="response"></div>
+        <div class="link-container">
+            <a class="button" href="/api-settings">API 설정하기</a>
+            <a class="button" href="/scheduled-tweets">목록보기</a>
+        </div>
+    </div>
+</body>
+</html>
