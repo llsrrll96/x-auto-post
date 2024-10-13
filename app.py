@@ -86,7 +86,6 @@ def schedule_tweet_func():
 def get_scheduled_tweets():
     return render_template('scheduled_tweets.html', scheduled_tweets=scheduled_tweets, sent_tweets=sent_tweets)
 
-
 @app.route('/api-settings', methods=['GET', 'POST'])
 def api_settings():
     global api_key, api_secret, access_token, access_token_secret, client
