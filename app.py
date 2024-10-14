@@ -4,6 +4,7 @@ import schedule
 import time
 import threading
 from datetime import datetime
+import pytz
 
 app = Flask(__name__)
 
@@ -68,8 +69,20 @@ def schedule_tweet_func():
     # 고유 ID 생성 (임시로 timestamp 사용)
     tweet_id = len(scheduled_tweets) + 1
 
+    # 현재 시간(서부 시간) 가져오기
+    oregon_tz = pytz.timezone('America/Los_Angeles')
+    now_oregon = datetime.now(oregon_tz)
+
+    # 한국 시간으로 변환
+    korea_tz = pytz.timezone('Asia/Seoul')
+    korea_time = korea_tz.localize(datetime.strptime(schedule_time, '%H:%M'))
+
+    # 한국 시간에서 서부 시간으로 변환
+    schedule_time_oregon = korea_time.astimezone(oregon_tz).strftime('%H:%M')
+
     # 스케줄링 설정
-    schedule.every().day.at(schedule_time).do(tweet_job, tweet_content, tweet_id)
+    schedule.every().day.at(schedule_time_oregon).do(tweet_job, tweet_content, tweet_id)
+
 
     # 예약된 트윗 정보를 리스트에 추가
     scheduled_tweets.append({
