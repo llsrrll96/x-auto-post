@@ -20,7 +20,6 @@ client = tweepy.Client(consumer_key=api_key, consumer_secret=api_secret, access_
 sent_tweets = []
 scheduled_tweets = []
 
-
 def tweet_job(tweet_content, tweet_id):
     if tweet_content:
         client.create_tweet(text=tweet_content)
@@ -34,17 +33,14 @@ def tweet_job(tweet_content, tweet_id):
 
         print("트윗이 성공적으로 게시되었습니다!: ", timestamp, tweet_content)
 
-
 def run_schedule():
     while True:
         schedule.run_pending()
         time.sleep(1)
 
-
 @app.route('/')
 def index():
     return render_template('index.html')
-
 
 @app.route('/tweet', methods=['POST'])
 def schedule_tweet():
@@ -58,7 +54,6 @@ def schedule_tweet():
 
     return "tweet: 트윗이 전송완료"
 
-
 @app.route('/schedule-tweet', methods=['POST'])
 def schedule_tweet_func():
     global scheduled_tweets
@@ -69,20 +64,15 @@ def schedule_tweet_func():
     # 고유 ID 생성 (임시로 timestamp 사용)
     tweet_id = len(scheduled_tweets) + 1
 
-    # 현재 시간(서부 시간) 가져오기
-    oregon_tz = pytz.timezone('America/Los_Angeles')
-    now_oregon = datetime.now(oregon_tz)
-
     # 한국 시간으로 변환
     korea_tz = pytz.timezone('Asia/Seoul')
     korea_time = korea_tz.localize(datetime.strptime(schedule_time, '%H:%M'))
 
-    # 한국 시간에서 서부 시간으로 변환
-    schedule_time_oregon = korea_time.astimezone(oregon_tz).strftime('%H:%M')
+    # 한국 시간에서 UTC 시간으로 변환
+    utc_time = korea_time.astimezone(pytz.utc).strftime('%H:%M')
 
     # 스케줄링 설정
-    schedule.every().day.at(schedule_time_oregon).do(tweet_job, tweet_content, tweet_id)
-
+    schedule.every().day.at(utc_time).do(tweet_job, tweet_content, tweet_id)
 
     # 예약된 트윗 정보를 리스트에 추가
     scheduled_tweets.append({
@@ -93,7 +83,6 @@ def schedule_tweet_func():
     })
 
     return redirect(url_for('get_scheduled_tweets'))
-
 
 @app.route('/scheduled-tweets', methods=['GET'])
 def get_scheduled_tweets():
@@ -117,7 +106,6 @@ def api_settings():
 
     return render_template('api_settings.html', api_key=api_key, api_secret=api_secret,
                            access_token=access_token, access_token_secret=access_token_secret)
-
 
 if __name__ == '__main__':
     # 스케줄러를 별도의 스레드에서 실행
