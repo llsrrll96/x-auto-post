@@ -22,16 +22,19 @@ scheduled_tweets = []
 
 def tweet_job(tweet_content, tweet_id):
     if tweet_content:
-        client.create_tweet(text=tweet_content)
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        try:
+            client.create_tweet(text=tweet_content)
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-        # 전송된 트윗 정보를 리스트에 추가
-        sent_tweets.append({'content': tweet_content, 'timestamp': timestamp})
+            # 전송된 트윗 정보를 리스트에 추가
+            sent_tweets.append({'content': tweet_content, 'timestamp': timestamp})
 
-        # 예약된 트윗 삭제 (트윗이 전송된 후)
-        scheduled_tweets[:] = [tweet for tweet in scheduled_tweets if tweet['id'] != tweet_id]
+            # 예약된 트윗 삭제 (트윗이 전송된 후)
+            scheduled_tweets[:] = [tweet for tweet in scheduled_tweets if tweet['id'] != tweet_id]
 
-        print("트윗이 성공적으로 게시되었습니다!: ", timestamp, tweet_content)
+            print("트윗이 성공적으로 게시되었습니다!: ", timestamp, tweet_content)
+        except Exception as e:
+            print("트윗 게시 실패:", e)
 
 def run_schedule():
     while True:
@@ -43,7 +46,7 @@ def index():
     return render_template('index.html')
 
 @app.route('/tweet', methods=['POST'])
-def schedule_tweet():
+def send_tweet():
     tweet_content = request.form['tweet']
     print(tweet_content)
     client.create_tweet(text=tweet_content)
@@ -58,27 +61,26 @@ def schedule_tweet():
 def schedule_tweet_func():
     global scheduled_tweets
     tweet_content = request.form['tweet']
-    schedule_time = request.form['scheduleTime']
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    schedule_time_str = request.form['scheduleTime']  # 'HH:MM' 형식으로 받음
+
+    # 한국 시간으로 변환
+    korea_tz = pytz.timezone('Asia/Seoul')
+    now = datetime.now(korea_tz)
+
+    # 'HH:MM' 형식으로 입력된 시간을 파싱하여 오늘 날짜와 결합
+    schedule_time = korea_tz.localize(datetime.strptime(schedule_time_str, '%H:%M'))
 
     # 고유 ID 생성 (임시로 timestamp 사용)
     tweet_id = len(scheduled_tweets) + 1
 
-    # 한국 시간으로 변환
-    korea_tz = pytz.timezone('Asia/Seoul')
-    korea_time = korea_tz.localize(datetime.strptime(schedule_time, '%H:%M'))
-
-    # 한국 시간에서 UTC 시간으로 변환
-    utc_time = korea_time.astimezone(pytz.utc).strftime('%H:%M')
-
     # 스케줄링 설정
-    schedule.every().day.at(utc_time).do(tweet_job, tweet_content, tweet_id)
+    schedule.every().day.at(schedule_time.strftime('%H:%M')).do(tweet_job, tweet_content, tweet_id)
 
     # 예약된 트윗 정보를 리스트에 추가
     scheduled_tweets.append({
         'content': tweet_content,
-        'time': schedule_time,
-        'timestamp': timestamp,
+        'time': schedule_time_str,
+        'timestamp': now.strftime('%Y-%m-%d %H:%M:%S'),
         'id': tweet_id
     })
 
