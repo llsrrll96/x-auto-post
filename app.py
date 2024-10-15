@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for
 import tweepy
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
+from pytz import timezone
 
 app = Flask(__name__)
 
@@ -20,6 +21,9 @@ scheduled_tweets = []
 # APScheduler 설정
 scheduler = BackgroundScheduler()
 scheduler.start()
+
+# 한국 시간대 설정
+KST = timezone('Asia/Seoul')
 
 def tweet_job(tweet_content):
     if tweet_content:
@@ -54,11 +58,16 @@ def schedule_tweet_func():
     schedule_time = request.form['scheduleTime']
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    # 고유 ID 생성 (임시로 timestamp 사용)
+    # 고유 ID 생성
     tweet_id = len(scheduled_tweets) + 1
 
+    # 입력된 시간을 KST로 변환
+    schedule_hour = int(schedule_time.split(':')[0])
+    schedule_minute = int(schedule_time.split(':')[1])
+    kst_time = KST.localize(datetime.now().replace(hour=schedule_hour, minute=schedule_minute, second=0, microsecond=0))
+
     # 스케줄링 설정
-    scheduler.add_job(tweet_job, 'cron', args=[tweet_content], hour=schedule_time.split(':')[0], minute=schedule_time.split(':')[1])
+    scheduler.add_job(tweet_job, 'cron', args=[tweet_content], hour=kst_time.hour, minute=kst_time.minute)
 
     # 예약된 트윗 정보를 리스트에 추가
     scheduled_tweets.append({
