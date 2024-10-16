@@ -68,12 +68,15 @@ def schedule_tweet_func():
     # 고유 ID 생성 (임시로 timestamp 사용)
     tweet_id = len(scheduled_tweets) + 1
 
-    # 스케줄링 시간 파싱
-    schedule_datetime = datetime.strptime(schedule_time, '%H:%M') + timedelta(seconds=10)
-    new_schedule_time = schedule_datetime.strftime('%H:%M')
+    # 한국 시간으로 입력된 스케줄링 시간 파싱
+    schedule_datetime = datetime.strptime(schedule_time, '%H:%M')
+
+    # 한국 시간에서 9시간을 빼서 미국 서버 시간으로 변환
+    est_schedule_time = schedule_datetime - timedelta(hours=9)
+    new_schedule_time = est_schedule_time.strftime('%H:%M')
 
     # 스케줄링 설정
-    schedule.every().day.at(schedule_time).do(tweet_job, tweet_content, tweet_id)
+    schedule.every().day.at(new_schedule_time).do(tweet_job, tweet_content, tweet_id)
 
     # 예약된 트윗 정보를 리스트에 추가
     scheduled_tweets.append({
