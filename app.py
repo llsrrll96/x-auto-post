@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for
 import tweepy
-from apscheduler.schedulers.background import BackgroundScheduler
-from datetime import datetime
-from pytz import timezone
+import schedule
+import time
+import threading
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
@@ -18,14 +19,8 @@ client = tweepy.Client(consumer_key=api_key, consumer_secret=api_secret, access_
 sent_tweets = []
 scheduled_tweets = []
 
-# APScheduler 설정
-scheduler = BackgroundScheduler()
-scheduler.start()
 
-# 한국 시간대 설정
-KST = timezone('Asia/Seoul')
-
-def tweet_job(tweet_content):
+def tweet_job(tweet_content, tweet_id):
     if tweet_content:
         client.create_tweet(text=tweet_content)
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -33,11 +28,22 @@ def tweet_job(tweet_content):
         # 전송된 트윗 정보를 리스트에 추가
         sent_tweets.append({'content': tweet_content, 'timestamp': timestamp})
 
+        # 예약된 트윗 삭제 (트윗이 전송된 후)
+        scheduled_tweets[:] = [tweet for tweet in scheduled_tweets if tweet['id'] != tweet_id]
+
         print("트윗이 성공적으로 게시되었습니다!: ", timestamp, tweet_content)
+
+
+def run_schedule():
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 @app.route('/tweet', methods=['POST'])
 def schedule_tweet():
@@ -51,6 +57,7 @@ def schedule_tweet():
 
     return "tweet: 트윗이 전송완료"
 
+
 @app.route('/schedule-tweet', methods=['POST'])
 def schedule_tweet_func():
     global scheduled_tweets
@@ -58,16 +65,15 @@ def schedule_tweet_func():
     schedule_time = request.form['scheduleTime']
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    # 고유 ID 생성
+    # 고유 ID 생성 (임시로 timestamp 사용)
     tweet_id = len(scheduled_tweets) + 1
 
-    # 입력된 시간을 KST로 변환
-    schedule_hour = int(schedule_time.split(':')[0])
-    schedule_minute = int(schedule_time.split(':')[1])
-    kst_time = KST.localize(datetime.now().replace(hour=schedule_hour, minute=schedule_minute, second=0, microsecond=0))
+    # 스케줄링 시간 파싱
+    schedule_datetime = datetime.strptime(schedule_time, '%H:%M') + timedelta(seconds=10)
+    new_schedule_time = schedule_datetime.strftime('%H:%M')
 
     # 스케줄링 설정
-    scheduler.add_job(tweet_job, 'cron', args=[tweet_content], hour=kst_time.hour, minute=kst_time.minute)
+    schedule.every().day.at(schedule_time).do(tweet_job, tweet_content, tweet_id)
 
     # 예약된 트윗 정보를 리스트에 추가
     scheduled_tweets.append({
@@ -78,6 +84,7 @@ def schedule_tweet_func():
     })
 
     return redirect(url_for('get_scheduled_tweets'))
+
 
 @app.route('/scheduled-tweets', methods=['GET'])
 def get_scheduled_tweets():
@@ -102,5 +109,8 @@ def api_settings():
     return render_template('api_settings.html', api_key=api_key, api_secret=api_secret,
                            access_token=access_token, access_token_secret=access_token_secret)
 
+
 if __name__ == '__main__':
+    # 스케줄러를 별도의 스레드에서 실행
+    threading.Thread(target=run_schedule, daemon=True).start()
     app.run(debug=True)
