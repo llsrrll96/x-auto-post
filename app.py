@@ -71,8 +71,8 @@ def schedule_tweet_func():
     # 한국 시간으로 입력된 스케줄링 시간 파싱
     schedule_datetime = datetime.strptime(schedule_time, '%H:%M')
 
-    # 한국 시간에서 9시간을 빼서 미국 서버 시간으로 변환
-    est_schedule_time = schedule_datetime + timedelta(hours=16)
+    # 한국 시간에서 16시간을 빼서 미국 서버 시간으로 변환
+    est_schedule_time = schedule_datetime - timedelta(hours=16)
     new_schedule_time = est_schedule_time.strftime('%H:%M')
 
     # 스케줄링 설정
